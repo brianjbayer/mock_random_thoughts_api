@@ -25,6 +25,23 @@ The spirit of this double is *non-attachment* to be easily
 replaced and regenerated from the `random_thoughts_api`
 Swagger document adding the minimal necessary customizations.
 
+## Running
+
+> **Prerequisites**: You must have Docker installed and
+> running on your local machine
+
+The easiest way to run the server is with the docker compose
+framework using the `dockercomposerun` script.
+
+This will pull the latest docker image of this project and run
+the server.
+
+To run the server using the docker compose framework, run
+the following command
+```
+./script/dockercomposerun
+```
+
 ## Operating
 
 ### Specifying the Port
@@ -37,15 +54,61 @@ PORT=8080
 ```
 
 ### Running the Server
-To run the server, run...
+To run the server, use the included `run` script by running the
+following command...
 ```
-npm start
+./script/run server
 ```
 
 ### Using the Included Swagger UI
 When the server is running, you can view the Swagger UI
 interface at `http://localhost:{PORT}/docs`
 (e.g. http://localhost:3000/docs).
+
+## Development
+This project can be developed using the supplied container-based
+development environment which includes `vim` and `git`.
+
+The development environment container volume mounts your local source
+code to recognize and persist any changes.
+
+By default the development environment container executes the alpine
+`/bin/ash` shell providing a command line interface.
+
+### To Develop Using the Container-Based Development Environment
+The easiest way to run the containerized development environment is with
+the docker-compose framework using the `dockercomposerun` script with the
+`-d` (development environment) option...
+```
+./script/dockercomposerun -d
+```
+
+This will pull and run the latest development environment image of this
+project.
+
+#### Building Your Own Development Environment Image
+You can also build and run your own development environment image.
+
+1. Build your development environment image specifying the `devenv` build
+   stage as the target and supplying a name (tag) for the image.
+   ```
+   docker build --no-cache --target devenv -t mock-rta-dev .
+   ```
+
+2. Run your development environment image in the docker-compose
+   environment and specify your development environment image
+   with `MOCK_IMAGE`
+   ```
+   MOCK_IMAGE=mock-rta-dev ./script/dockercomposerun -d
+   ```
+
+#### Specifying the Source Code Location
+To use another directory as the source code for the development
+environment, set the `MOCK_SRC` environment variable.
+For example...
+```
+MOCK_SRC=${PWD} MOCK_IMAGE=mock-rta-dev ./script/dockercomposerun -d
+```
 
 ## Specifications
 

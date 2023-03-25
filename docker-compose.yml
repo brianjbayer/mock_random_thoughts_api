@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  mock:
+    image: brianjbayer/mock_random_thoughts_api:${MOCK_TAG:-latest}
+    container_name: ${MOCK_HOSTNAME:-mock}
+    environment:
+      - PORT
+    ports:
+    - ${PORT:-3000}:${PORT:-3000}
