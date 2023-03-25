@@ -1,0 +1,951 @@
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+servers:
+- url: "https://{defaultHost}"
+  variables:
+    defaultHost:
+      default: www.example.com
+- url: http://localhost:3000
+  description: Local development
+paths:
+
+  # --- CUSTOM Endpoints ---
+  /livez:
+    get:
+      summary: liveness health check
+      operationId: livezGET
+      parameters: []
+      responses:
+        "200":
+          description: alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/livez_response'
+              examples:
+                alive:
+                  value:
+                    status: 200
+                    message: alive
+      x-swagger-router-controller: Default
+  /readyz:
+    get:
+      summary: readiness health check
+      operationId: readyzGET
+      parameters: []
+      responses:
+        "200":
+          description: ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/readyz_response'
+              examples:
+                ready:
+                  value:
+                    status: 200
+                    message: ready
+                    database_connection: ok
+      x-swagger-router-controller: Default
+
+  # --- Swagger Generated API Endpoints ---
+  /v1/login:
+    post:
+      summary: login user
+      operationId: v1LoginPOST
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login'
+      responses:
+        "200":
+          description: logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/login_response'
+              examples:
+                successful_login:
+                  value:
+                    message: User logged in successfully
+                    token: xxxxxxxx.xxxxxxxxxx.xxxxxx
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Invalid login
+      x-swagger-router-controller: Default
+    delete:
+      summary: logout user
+      operationId: v1LoginDELETE
+      responses:
+        "200":
+          description: logged out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/logout_response'
+              examples:
+                successful_logout:
+                  value:
+                    message: User logged out successfully
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Nil JSON web token
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+  /v1/random_thoughts:
+    get:
+      summary: list random_thoughts
+      operationId: v1Random_thoughtsGET
+      parameters:
+      - name: page
+        in: query
+        description: page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+      - name: name
+        in: query
+        description: user name
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paginated_random_thoughts'
+      x-swagger-router-controller: Default
+    post:
+      summary: create random_thought
+      operationId: v1Random_thoughtsPOST
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_random_thought'
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/random_thought_response'
+        "400":
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                empty_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: param is missing or the value is empty:...
+                invalid_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: Error occurred while parsing request parameters
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature verification failed
+        "422":
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unprocessable_entity:
+                  value:
+                    status: 422
+                    error: unprocessable_entity
+                    message: "Validation failed: Thought can't be blank, Mood can't\
+                      \ be blank"
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+  /v1/random_thoughts/{id}:
+    get:
+      summary: show random_thought
+      operationId: v1Random_thoughtsIdGET
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/random_thought_response'
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find RandomThought with 'id'=??
+      x-swagger-router-controller: Default
+    delete:
+      summary: delete random_thought
+      operationId: v1Random_thoughtsIdDELETE
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/random_thought_response'
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature verification failed
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find RandomThought with 'id'=??
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+    patch:
+      summary: update random_thought
+      operationId: v1Random_thoughtsIdPATCH
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update_random_thought'
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/random_thought_response'
+        "400":
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                empty_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: param is missing or the value is empty:...
+                invalid_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: Error occurred while parsing request parameters
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature verification failed
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find RandomThought with 'id'=??
+        "422":
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unprocessable_entity:
+                  value:
+                    status: 422
+                    error: unprocessable_entity
+                    message: "Validation failed: Thought can't be blank, Mood can't\
+                      \ be blank"
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+  /v1/users:
+    get:
+      summary: list users
+      operationId: v1UsersGET
+      parameters:
+      - name: page
+        in: query
+        description: page number
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/paginated_users'
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature verification failed
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+    post:
+      summary: create user
+      operationId: v1UsersPOST
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/create_user'
+      responses:
+        "201":
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/same_user_response'
+        "400":
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                empty_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: param is missing or the value is empty:...
+                invalid_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: Error occurred while parsing request parameters
+        "422":
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unprocessable_entity:
+                  value:
+                    status: 422
+                    error: unprocessable_entity
+                    message: "Validation failed: Email can't be blank, Email must\
+                      \ match URI::MailTo::EMAIL_REGEXP, Display name can't be blank,\
+                      \ Password can't be blank, Password is too short (minimum is\
+                      \ 8 characters)"
+                email_exists:
+                  value:
+                    status: 422
+                    error: unprocessable_entity
+                    message: "Validation failed: Email has already been taken"
+      x-swagger-router-controller: Default
+  /v1/users/{id}:
+    get:
+      summary: show user
+      operationId: v1UsersIdGET
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature verification failed
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find User with 'id'=??
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+    delete:
+      summary: delete user
+      operationId: v1UsersIdDELETE
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/same_user_response'
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Expected a different algorithm
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find User with 'id'=??
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+    patch:
+      summary: update user
+      operationId: v1UsersIdPATCH
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update_user'
+      responses:
+        "200":
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/same_user_response'
+        "400":
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                empty_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: param is missing or the value is empty:...
+                invalid_request:
+                  value:
+                    status: 400
+                    error: bad_request
+                    message: Error occurred while parsing request parameters
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unauthorized:
+                  value:
+                    status: 401
+                    error: unauthorized
+                    message: Signature has expired
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                not_found:
+                  value:
+                    status: 404
+                    error: not_found
+                    message: Couldn't find User with 'id'=??
+        "422":
+          description: unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              examples:
+                unprocessable_entity:
+                  value:
+                    status: 422
+                    error: unprocessable_entity
+                    message: "Validation failed: Email can't be blank, Email must\
+                      \ match URI::MailTo::EMAIL_REGEXP, Display name can't be blank,\
+                      \ Password can't be blank, Password is too short (minimum is\
+                      \ 8 characters)"
+      security:
+      - bearer: []
+      x-swagger-router-controller: Default
+components:
+  schemas:
+
+    # --- CUSTOM Schemas ---
+    livez_response:
+      required:
+      - status
+      - message
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+    readyz_response:
+      required:
+      - status
+      - message
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        database_connection:
+          type: string
+
+    # --- Swagger Generated API Schemas ---
+    new_random_thought:
+      required:
+      - mood
+      - thought
+      type: object
+      properties:
+        thought:
+          minLength: 1
+          type: string
+        mood:
+          minLength: 1
+          type: string
+    create_random_thought:
+      required:
+      - random_thought
+      type: object
+      properties:
+        random_thought:
+          $ref: '#/components/schemas/new_random_thought'
+    random_thought_response:
+      required:
+      - id
+      - mood
+      - name
+      - thought
+      type: object
+      properties:
+        id:
+          type: integer
+        thought:
+          type: string
+        mood:
+          minLength: 1
+          type: string
+        name:
+          type: string
+      example:
+        thought: thought
+        mood: mood
+        name: name
+        id: 0
+    updated_random_thought:
+      type: object
+      properties:
+        thought:
+          minLength: 1
+          type: string
+        mood:
+          minLength: 1
+          type: string
+    update_random_thought:
+      required:
+      - random_thought
+      type: object
+      properties:
+        random_thought:
+          $ref: '#/components/schemas/updated_random_thought'
+    paginated_random_thoughts:
+      required:
+      - data
+      - meta
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/random_thought_response'
+        meta:
+          $ref: '#/components/schemas/pagination'
+      example:
+        data:
+        - thought: thought
+          mood: mood
+          name: name
+          id: 0
+        - thought: thought
+          mood: mood
+          name: name
+          id: 0
+        meta:
+          next_page: 1
+          total_count: 2
+          total_pages: 5
+          prev_page: 5
+          current_page: 6
+    new_user:
+      required:
+      - display_name
+      - email
+      - password
+      - password_confirmation
+      type: object
+      properties:
+        email:
+          maxLength: 254
+          minLength: 1
+          type: string
+        display_name:
+          minLength: 1
+          type: string
+        password:
+          minLength: 8
+          type: string
+        password_confirmation:
+          minLength: 8
+          type: string
+    create_user:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/new_user'
+    user_response:
+      required:
+      - display_name
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          maxLength: 254
+          minLength: 1
+          type: string
+        display_name:
+          minLength: 1
+          type: string
+      example:
+        id: 0
+        display_name: display_name
+        email: email
+    same_user_response:
+      required:
+      - display_name
+      - email
+      - id
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          maxLength: 254
+          minLength: 1
+          type: string
+        display_name:
+          minLength: 1
+          type: string
+      example:
+        id: 0
+        display_name: display_name
+        email: email
+    different_user_response:
+      required:
+      - display_name
+      type: object
+      properties:
+        display_name:
+          minLength: 1
+          type: string
+    updated_user:
+      type: object
+      properties:
+        email:
+          maxLength: 254
+          minLength: 1
+          type: string
+        display_name:
+          minLength: 1
+          type: string
+        password:
+          minLength: 8
+          type: string
+        password_confirmation:
+          minLength: 8
+          type: string
+    update_user:
+      required:
+      - user
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/updated_user'
+    paginated_users:
+      required:
+      - data
+      - meta
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/user_response'
+        meta:
+          $ref: '#/components/schemas/pagination'
+      example:
+        data:
+        - id: 0
+          display_name: display_name
+          email: email
+        - id: 0
+          display_name: display_name
+          email: email
+        meta:
+          next_page: 1
+          total_count: 2
+          total_pages: 5
+          prev_page: 5
+          current_page: 6
+    login_credentials:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    login:
+      type: object
+      properties:
+        authentication:
+          $ref: '#/components/schemas/login_credentials'
+    login_response:
+      required:
+      - message
+      - token
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+      example:
+        message: message
+        token: token
+    logout_response:
+      required:
+      - message
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: message
+    pagination:
+      required:
+      - current_page
+      - next_page
+      - prev_page
+      - total_count
+      - total_pages
+      type: object
+      properties:
+        current_page:
+          type: integer
+        next_page:
+          type: integer
+          nullable: true
+        prev_page:
+          type: integer
+          nullable: true
+        total_pages:
+          type: integer
+        total_count:
+          type: integer
+      example:
+        next_page: 1
+        total_count: 2
+        total_pages: 5
+        prev_page: 5
+        current_page: 6
+    error:
+      required:
+      - error
+      - message
+      - status
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+    inline_response_200:
+      oneOf:
+      - $ref: '#/components/schemas/same_user_response'
+      - $ref: '#/components/schemas/different_user_response'
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer

@@ -1,0 +1,5 @@
+# Ignore source node_modules (these should be built in the image)
+node_modules
+
+# Ignore npm logs
+npm-debug.log

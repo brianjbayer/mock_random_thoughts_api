@@ -1,0 +1,14 @@
+# Ignore source node_modules (build artifacts)
+node_modules
+
+# Ignore build
+build
+
+# Ignore npm logs
+npm-debug.log
+
+# Ignore nyc coverage stuff
+.nyc
+
+# DO NOT COMMIT .env FILES
+.env
