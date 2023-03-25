@@ -2,12 +2,12 @@
 #--- mock_random_thoughts_api ---
 #-----------------------------------
 # Build and Run deployment image
-# docker build --no-cache -t rta-mock .
-# docker run -it --rm -p 3000:3000 rta-mock
+# docker build --no-cache -t mock-rta .
+# docker run -it --rm -p 3000:3000 mock-rta
 
 # Build and Run development environment image
-# docker build --no-cache --target devenv -t rta-mock-dev .
-# docker run -it --rm -v $(pwd):/usr/src/app -w /usr/src/app -p 3000:3000 rta-mock-dev
+# docker build --no-cache --target devenv -t mock-rta-dev .
+# docker run -it --rm -v $(pwd):/usr/src/app -w /usr/src/app -p 3000:3000 mock-rta-dev
 
 #--- Base Image ---
 ARG BASE_IMAGE=node:19-alpine3.16

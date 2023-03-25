@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  mock:
+    image: "${MOCK_IMAGE:-brianjbayer/mock_random_thoughts_api-dev:latest}"
+    volumes:
+      - ${MOCK_SRC:-.}:/usr/src/app
+    working_dir: /usr/src/app
