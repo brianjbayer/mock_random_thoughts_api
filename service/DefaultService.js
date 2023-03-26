@@ -1,5 +1,6 @@
 const jwtUtils = require('../utils/jwt');
 const randomThoughtUtils = require('../utils/random_thoughts');
+const userUtils = require('../utils/users');
 
 // --- CUSTOM Services ---
 
@@ -86,7 +87,7 @@ exports.v1LoginPOST = function (body) {
  * */
 exports.v1Random_thoughtsGET = function (page, name) {
   return new Promise((resolve, reject) => {
-    // --- CUSTOM Retrieve any created Random Thoughts (or a default)
+    // CUSTOM Retrieve any created Random Thoughts (or a default)
     const randomThought = randomThoughtUtils.popRandomThought();
     const examples = {};
     examples['application/json'] = {
@@ -195,9 +196,11 @@ exports.v1Random_thoughtsIdPATCH = function (body, id) {
  * */
 exports.v1Random_thoughtsPOST = function (body) {
   return new Promise((resolve, reject) => {
-    // --- CUSTOM Store any created Random Thoughts for later listing
+    // CUSTOM Store any created Random Thoughts for later listing
     const randomThought = body.random_thought;
-    randomThought.id = 77777;
+    const user = userUtils.popUser();
+    randomThought.id = 0;
+    randomThought.name = user.display_name;
     randomThoughtUtils.pushRandomThought(randomThought);
     const examples = {};
     examples['application/json'] = {
@@ -320,13 +323,16 @@ exports.v1UsersIdPATCH = function (body, id) {
  * */
 exports.v1UsersPOST = function (body) {
   return new Promise((resolve, reject) => {
-    // CUSTOM Create User Response
-    const { email, display_name: displayName } = body.user;
+    // CUSTOM Create User Response and store any created user
+    // for later use when creating random thought (name)
+    const user = body.user;
+    user.id = 0;
+    userUtils.pushUser(user);
     const examples = {};
     examples['application/json'] = {
-      id: 999999,
-      display_name: displayName,
-      email,
+      id: user.id,
+      display_name: user.display_name,
+      email: user.email,
     };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
