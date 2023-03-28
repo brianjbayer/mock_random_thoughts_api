@@ -11,10 +11,11 @@
 # OPTIONS:
 # -c: Use the docker-compose CI environment with MOCK_IMAGE
 # -d: Use the docker-compose Dev environment with MOCK_IMAGE
+# -t: Run the e2e tests (and not the mock service)
 # ----------------------------------------------------------------------
 
 usage() {
-  echo "Usage: $0 [-cd] [CMD]"
+  echo "Usage: $0 [-cdt] [CMD]"
 }
 
 err_exit() {
@@ -29,7 +30,7 @@ err_exit() {
 set -e
 
 # Handle options
-while getopts ":cd" options; do
+while getopts ":cdt" options; do
   case "${options}" in
     c)
       echo "CI Environment"
@@ -39,6 +40,11 @@ while getopts ":cd" options; do
     d)
       echo "Development Environment"
       devenv=true
+      ;;
+
+    t)
+      echo "Running End-To-End (E2E) Tests"
+      run_e2etests=true
       ;;
 
     \?)
@@ -74,6 +80,13 @@ fi
 echo "...COMMAND: [${docker_compose_command}]"
 echo ''
 
+if [ ! -z ${run_e2etests} ]; then
+  echo "...Running E2E Tests Image [${E2ETESTS_IMAGE}] against Image [${MOCK_IMAGE}]"
+  docker_compose_command="${docker_compose_command} -f docker-compose.e2e.yml "
+fi
+echo "...COMMAND: [${docker_compose_command}]"
+echo ''
+
 echo 'DOCKER-COMPOSE CONFIGURATION...'
 $docker_compose_command config
 echo ''
@@ -92,19 +105,27 @@ echo ''
 echo "DOCKER-COMPOSE RUNNING [$@]..."
 # Allow to fail but catch return code
 set +e
-# Specify the --service-ports option to expose app's PORTS
-# on host machine (by default docker-compose run does not
-# expose host ports)
-$docker_compose_command run --rm --service-ports mock "$@"
-run_return_code=$?
-# NOTE return code must be caught before any other command
+
+if [ -z ${run_e2etests} ]; then
+  # Specify the --service-ports option to expose app's PORTS
+  # on host machine (by default docker-compose run does not
+  # expose host ports)
+  $docker_compose_command run --rm --service-ports mock "$@"
+  # NOTE return code must be caught before any other command
+  run_return_code=$?
+else
+  echo "RUNNING THE E2E TESTS (e2etests SERVICE) (NOT mock SERVICE)..."
+  $docker_compose_command run --rm e2etests "$@"
+  # NOTE return code must be caught before any other command
+  run_return_code=$?
+fi
 set -e
 echo ''
 
 if [ $run_return_code -eq 0 ]; then
-    run_disposition='PASSED'
+  run_disposition='PASSED'
 else
-    run_disposition='FAILED'
+  run_disposition='FAILED'
 fi
 echo "...RUN [${run_disposition}] WITH RETURN CODE [${run_return_code}]"
 echo ''
