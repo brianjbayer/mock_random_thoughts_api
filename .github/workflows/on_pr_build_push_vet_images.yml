@@ -41,11 +41,20 @@ jobs:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-# TODO: Add vetting of image(s), for now just push unvetted to vetted
+  vet-deploy-as-e2e-tests-target:
+    needs: [pr-norm-branch, build-and-push-branch-unvetted]
+    runs-on: ubuntu-latest
+    env:
+      UNVETTED_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_unvetted:${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun e2e tests against unvetted image
+        run: "MOCK_IMAGE=${UNVETTED_IMAGE} ./script/dockercomposerun -ct"
 
-# Push (IF) Vetted Deploy Image
+  # Push (IF) Vetted Deploy Image
   push-branch-vetted-deploy-image:
     needs:
+      - vet-deploy-as-e2e-tests-target
       - build-and-push-branch-unvetted
       - pr-norm-branch
     uses: brianjbayer/actions-image-cicd/.github/workflows/pull_push_image.yml@main
@@ -57,4 +66,15 @@ jobs:
     secrets:
       registry_u: ${{ secrets.DOCKER_HUB_USERNAME }}
       registry_p: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  # Vet Dev Environment Image
+  vet-devenv-as-e2e-tests-target:
+    needs: [pr-norm-branch, build-and-push-branch-devenv]
+    runs-on: ubuntu-latest
+    env:
+      DEVENV_IMAGE: ${{ github.repository }}_${{ needs.pr-norm-branch.outputs.name }}_dev:${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: dockercomposerun e2e tests against devenv image
+        run: "MOCK_IMAGE=${DEVENV_IMAGE} ./script/dockercomposerun -dt"
 
