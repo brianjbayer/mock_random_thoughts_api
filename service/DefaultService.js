@@ -27,6 +27,7 @@ exports.readyzGET = function () {
       status: 200,
       message: 'ready',
       database_connection: 'ok',
+      database_migrations: 'ok',
     };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
