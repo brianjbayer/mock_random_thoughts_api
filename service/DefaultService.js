@@ -279,12 +279,16 @@ exports.v1UsersIdDELETE = function (id) {
  * show user
  *
  * id String id
- * returns inline_response_200
+ * returns user_response
  * */
 exports.v1UsersIdGET = function (id) {
   return new Promise((resolve, reject) => {
-    const examples = {};
-    examples['application/json'] = '';
+    var examples = {};
+    examples['application/json'] = {
+      "id" : 0,
+      "display_name" : "display_name",
+      "email" : "email",
+    };
     if (Object.keys(examples).length > 0) {
       resolve(examples[Object.keys(examples)[0]]);
     } else {
