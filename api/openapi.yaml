@@ -473,7 +473,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/inline_response_200'
+                $ref: '#/components/schemas/user_response'
         "401":
           description: unauthorized
           content:
@@ -807,14 +807,6 @@ components:
         id: 0
         display_name: display_name
         email: email
-    different_user_response:
-      required:
-      - display_name
-      type: object
-      properties:
-        display_name:
-          minLength: 1
-          type: string
     updated_user:
       type: object
       properties:
@@ -941,10 +933,6 @@ components:
           type: string
         message:
           type: string
-    inline_response_200:
-      oneOf:
-      - $ref: '#/components/schemas/same_user_response'
-      - $ref: '#/components/schemas/different_user_response'
   securitySchemes:
     bearer:
       type: http
