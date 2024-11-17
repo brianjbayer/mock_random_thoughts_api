@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   mock:
     image: brianjbayer/mock_random_thoughts_api:${MOCK_TAG:-latest}
@@ -7,3 +6,9 @@ services:
       - PORT
     ports:
     - ${PORT:-3000}:${PORT:-3000}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "node", "is_ok.js", "http://localhost:${PORT:-3000}/readyz"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 10

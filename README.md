@@ -115,7 +115,7 @@ As part of the Continuous Integration (CI) workflow for this
 project, the
 [random_thoughts_api_e2e](https://github.com/brianjbayer/random_thoughts_api_e2e)
 End-To-End (E2E) tests are run against the mock server images
-using the docker compose framework with the `-t` (tests) option.
+using the docker compose framework with the `-e` (e2etests) option.
 
 You can run these E2E tests against the official images or
 specify your own images with the `MOCK_IMAGE` environment
@@ -124,7 +124,7 @@ variable.
 For example, to run the E2E tests against your own development
 environment image, run the following command...
 ```
-MOCK_IMAGE=mock-rta-dev ./script/dockercomposerun -dt
+MOCK_IMAGE=mock-rta-dev ./script/dockercomposerun -de
 ```
 
 ## Specifications
