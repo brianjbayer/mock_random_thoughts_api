@@ -1,138 +1,88 @@
 #!/bin/sh
-# This script runs the project docker-compose framework.
-#
-# - The arguments to this script are passed to the mock service
-#   as command override
-#
-# - Any environment variables set when calling this script are passed
-#   through to the docker-compose framework
-#   (e.g. configuration other than the defaults)
-#
-# OPTIONS:
-# -c: Use the docker-compose CI environment with MOCK_IMAGE
-# -d: Use the docker-compose Dev environment with MOCK_IMAGE
-# -t: Run the e2e tests (and not the mock service)
-# ----------------------------------------------------------------------
+set -e
 
 usage() {
-  echo "Usage: $0 [-cdt] [CMD]"
+  cat << USAGE
+Usage: $0 [-cdeh] [CMD]
+This script orchestrates 'docker compose run mock' using the docker compose framework
+  * Arguments are passed to the app service as the CMD (entrypoint)
+  * Environment variables override app and framework defaults
+
+OPTIONS: (in override order)
+  -d: Run the docker-compose Dev environment
+  -c: Run the docker-compose CI environment (must specify APP_IMAGE)
+
+Other Options:
+  -e: Run the e2e tests (against the app service)
+USAGE
 }
 
 err_exit() {
-  local err_msg="$1"
-  local err_code=$2
+  err_code=$1
+  err_msg="$2"
   echo "${err_msg}  --  Exit:[${err_code}]" 1>&2
-  usage
   exit $err_code
 }
 
-# Exit script on any errors
-set -e
-
 # Handle options
-while getopts ":cdt" options; do
+while getopts ":cdeh" options; do
   case "${options}" in
     c)
-      echo "CI Environment"
-      ci=true
+      ci=1
       ;;
-
     d)
-      echo "Development Environment"
-      devenv=true
+      devenv=1
       ;;
-
-    t)
-      echo "Running End-To-End (E2E) Tests"
-      run_e2etests=true
+    e)
+      run_e2etests=1
       ;;
-
+    h)
+      usage ; exit
+      ;;
     \?)
-    err_exit "Invalid Option: -$OPTARG" 1
+      usage
+      err_exit 1 "Invalid Option: -$OPTARG"
       ;;
   esac
 done
 shift $((OPTIND-1))
 
-echo ''
-echo "ENVIRONMENT VARIABLES..."
-env
-echo ''
+echo "DOCKER VERSION: [`docker --version`]"
 
-echo 'DOCKER VERSION...'
-docker --version
-docker-compose --version
-echo ''
-
-# Override docker compose environments
-echo 'DOCKER-COMPOSE COMMAND...'
 docker_compose_command='docker compose -f docker-compose.yml '
+[ -n "${devenv}" ] && docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
+[ -n "${ci}" ] && docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
 
-if [ ! -z ${ci} ]; then
-  echo "...Using CI Environment with Image [${MOCK_IMAGE}]"
-  docker_compose_command="${docker_compose_command} -f docker-compose.ci.yml "
-fi
+# Default is to run the app, but must specify --service-ports
+# (by default docker compose run does not expose host ports)
+run_command='run --rm --service-ports mock '
 
-if [ ! -z ${devenv} ]; then
-  echo "...Using Development Environment with Image [${MOCK_IMAGE}]"
-  docker_compose_command="${docker_compose_command} -f docker-compose.dev.yml "
-fi
-echo "...COMMAND: [${docker_compose_command}]"
-echo ''
-
-if [ ! -z ${run_e2etests} ]; then
-  echo "...Running E2E Tests Image [${E2ETESTS_IMAGE}] against Image [${MOCK_IMAGE}]"
+if [ -n "${run_e2etests}" ]; then
   docker_compose_command="${docker_compose_command} -f docker-compose.e2e.yml "
+  run_command='run --rm e2etests '
 fi
-echo "...COMMAND: [${docker_compose_command}]"
-echo ''
 
-echo 'DOCKER-COMPOSE CONFIGURATION...'
+docker_compose_run_command="${docker_compose_command} ${run_command}"
+echo "DOCKER COMPOSE RUN COMMAND: [${docker_compose_run_command}]"
+
+echo 'DOCKER COMPOSE CONFIGURATION...'
 $docker_compose_command config
-echo ''
 
-echo 'DOCKER-COMPOSE PULLING...'
-set +e
-$docker_compose_command pull
-echo '...Allowing pull errors (for local images)'
-set -e
-echo ''
+echo 'DOCKER COMPOSE PULLING...'
+set +e ; $docker_compose_command pull ; set -e
 
-echo 'DOCKER IMAGES...'
-docker images
-echo ''
-
-echo "DOCKER-COMPOSE RUNNING [$@]..."
+echo "DOCKER COMPOSE RUNNING [${docker_compose_run_command}] [$@]..."
 # Allow to fail but catch return code
 set +e
-
-if [ -z ${run_e2etests} ]; then
-  # Specify the --service-ports option to expose app's PORTS
-  # on host machine (by default docker-compose run does not
-  # expose host ports)
-  $docker_compose_command run --rm --service-ports mock "$@"
-  # NOTE return code must be caught before any other command
-  run_return_code=$?
-else
-  echo "RUNNING THE E2E TESTS (e2etests SERVICE) (NOT mock SERVICE)..."
-  $docker_compose_command run --rm e2etests "$@"
-  # NOTE return code must be caught before any other command
-  run_return_code=$?
-fi
+${docker_compose_run_command} "$@"
+run_return_code=$?
 set -e
-echo ''
 
-if [ $run_return_code -eq 0 ]; then
-  run_disposition='PASSED'
-else
-  run_disposition='FAILED'
-fi
-echo "...RUN [${run_disposition}] WITH RETURN CODE [${run_return_code}]"
-echo ''
+run_disposition='SUCCESS' ; [ $run_return_code -eq 0 ] || run_disposition='FAIL'
+echo "DOCKER COMPOSE RUN [${run_disposition}] WITH RETURN CODE [${run_return_code}]"
 
 echo 'DOCKER-COMPOSE DOWN...'
 $docker_compose_command down
-echo ''
 
-echo "EXITING WITH ${run_disposition} RUN RETURN CODE ${run_return_code}"
+echo "EXIT: ${run_disposition} [${run_return_code}]"
 exit $run_return_code

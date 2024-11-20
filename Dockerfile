@@ -10,11 +10,11 @@
 # docker run -it --rm -v $(pwd):/usr/src/app -w /usr/src/app -p 3000:3000 mock-rta-dev
 
 #--- Base Image ---
-ARG BASE_IMAGE=node:19-alpine3.16
-FROM ${BASE_IMAGE} AS node-alpine
+ARG BASE_IMAGE=node:19-slim
+FROM ${BASE_IMAGE} AS node-base
 
 #--- Base Builder Stage ---
-FROM node-alpine AS base-builder
+FROM node-base AS base-builder
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -37,13 +37,17 @@ FROM dev-builder AS devenv
 
 # For Dev Env, add git and vim at least
 ARG DEVENV_PACKAGES='git vim'
-RUN apk --update add ${DEVENV_PACKAGES}
+
+RUN apt-get update \
+  && apt-get -y dist-upgrade \
+  && apt-get -y install ${DEVENV_PACKAGES}\
+  && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /usr/src/app
 
 # Start devenv in (command line) shell
-CMD sh
+CMD ["bash"]
 
 #--- Deploy Builder Stage ---
 FROM base-builder AS deploy-builder
@@ -55,10 +59,10 @@ WORKDIR /usr/src/app
 RUN npm ci --only=production
 
 #--- Deploy Stages ---
-FROM node-alpine AS deploy
+FROM node-base AS deploy
 
 # Add a user so not running as root
-RUN adduser -D deployer
+RUN adduser --disabled-password --gecos '' deployer
 
 # Run as deployer USER instead of as root
 USER deployer
